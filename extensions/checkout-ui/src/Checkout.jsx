@@ -1,8 +1,7 @@
+import React, { useState } from "react";
 import {
-  Banner,
-  useApi,
-  useTranslate,
   reactExtension,
+  TextField,
 } from '@shopify/ui-extensions-react/checkout';
 
 export default reactExtension(
@@ -11,12 +10,17 @@ export default reactExtension(
 );
 
 function Extension() {
-  const translate = useTranslate();
-  const { extension } = useApi();
-
+  const [error, setError] = useState(false);
+  const [residentID, setResidentID] = useState("");
+  const handleFieldChange = (value) => {
+    setResidentID(value);
+  };
   return (
-    <Banner title="checkout-ui">
-      {translate('welcome', {target: extension.target})}
-    </Banner>
+    <TextField
+      label="Resident ID"
+      value={residentID}
+      error={error ? "Please provide a valid ID" : false}
+      onChange={handleFieldChange}
+    />
   );
 }
