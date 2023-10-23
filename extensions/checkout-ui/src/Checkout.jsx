@@ -4,6 +4,7 @@ import {
   TextField,
   useApplyMetafieldsChange,
   useMetafield,
+  useBuyerJourneyIntercept,
 } from '@shopify/ui-extensions-react/checkout';
 
 export default reactExtension(
@@ -27,6 +28,26 @@ function Extension() {
   // validation
   const validateResidentId = (value) => {
     return value.length === 9;
+  };
+  useBuyerJourneyIntercept(() => {
+    if (!validateResidentId(residentIdState.value)) {
+      return {
+        behavior: "block",
+        reason: "Form is not valid.",
+        // if a partner tries block checkout, then `perform()` does not get called and nothing happens
+        // acts like `behavior: allow`
+        perform: () => showValidationUI(),
+      };
+    } else {
+      setError(false);
+      return {
+        behavior: "allow",
+      };
+    }
+  });
+  const showValidationUI = () => {
+    console.log("validation UI");
+    setError(true);
   };
 
   // handling errors

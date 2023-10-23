@@ -1141,11 +1141,11 @@
             var dispatcher = resolveDispatcher();
             return dispatcher.useReducer(reducer, initialArg, init);
           }
-          function useRef2(initialValue) {
+          function useRef3(initialValue) {
             var dispatcher = resolveDispatcher();
             return dispatcher.useRef(initialValue);
           }
-          function useEffect2(create, deps) {
+          function useEffect3(create, deps) {
             var dispatcher = resolveDispatcher();
             return dispatcher.useEffect(create, deps);
           }
@@ -1927,14 +1927,14 @@
           exports.useContext = useContext3;
           exports.useDebugValue = useDebugValue;
           exports.useDeferredValue = useDeferredValue;
-          exports.useEffect = useEffect2;
+          exports.useEffect = useEffect3;
           exports.useId = useId;
           exports.useImperativeHandle = useImperativeHandle;
           exports.useInsertionEffect = useInsertionEffect;
           exports.useLayoutEffect = useLayoutEffect;
           exports.useMemo = useMemo3;
           exports.useReducer = useReducer;
-          exports.useRef = useRef2;
+          exports.useRef = useRef3;
           exports.useState = useState3;
           exports.useSyncExternalStore = useSyncExternalStore;
           exports.useTransition = useTransition;
@@ -18424,7 +18424,7 @@
   });
 
   // extensions/checkout-ui/src/Checkout.jsx
-  var import_react12 = __toESM(require_react());
+  var import_react13 = __toESM(require_react());
 
   // node_modules/@remote-ui/rpc/build/esm/memory.mjs
   function isBasicObject(value) {
@@ -19508,11 +19508,29 @@ ${errorInfo.componentStack}`);
     return subscription.current;
   }
 
-  // node_modules/@shopify/ui-extensions-react/build/esm/surfaces/checkout/hooks/metafields.mjs
+  // node_modules/@shopify/ui-extensions-react/build/esm/surfaces/checkout/hooks/buyer-journey.mjs
   var import_react11 = __toESM(require_react(), 1);
+  function useBuyerJourneyIntercept(interceptor) {
+    const api = useApi();
+    if (!("buyerJourney" in api)) {
+      throw new ExtensionHasNoMethodError("buyerJourney", api.extension.target);
+    }
+    const interceptorRef = (0, import_react11.useRef)(interceptor);
+    interceptorRef.current = interceptor;
+    return (0, import_react11.useEffect)(() => {
+      const teardownPromise = api.buyerJourney.intercept((interceptorProps) => interceptorRef.current(interceptorProps));
+      return () => {
+        teardownPromise.then((teardown) => teardown()).catch(() => {
+        });
+      };
+    }, [api.buyerJourney]);
+  }
+
+  // node_modules/@shopify/ui-extensions-react/build/esm/surfaces/checkout/hooks/metafields.mjs
+  var import_react12 = __toESM(require_react(), 1);
   function useMetafields(filters) {
     const metaFields = useSubscription(useApi().metafields);
-    return (0, import_react11.useMemo)(() => {
+    return (0, import_react12.useMemo)(() => {
       if (filters) {
         const {
           namespace,
@@ -19560,7 +19578,7 @@ ${errorInfo.componentStack}`);
   function Extension() {
     const METAFIELD_NAMESPACE = "RESIDENT_ID_APP";
     const METAFIELD_KEY = "resident_id";
-    const [error, setError] = (0, import_react12.useState)(false);
+    const [error, setError] = (0, import_react13.useState)(false);
     const updateMetafield = useApplyMetafieldsChange();
     const residentIdState = useMetafield({
       namespace: METAFIELD_NAMESPACE,
@@ -19568,6 +19586,26 @@ ${errorInfo.componentStack}`);
     });
     const validateResidentId = (value) => {
       return value.length === 9;
+    };
+    useBuyerJourneyIntercept(() => {
+      if (!validateResidentId(residentIdState.value)) {
+        return {
+          behavior: "block",
+          reason: "Form is not valid.",
+          // if a partner tries block checkout, then `perform()` does not get called and nothing happens
+          // acts like `behavior: allow`
+          perform: () => showValidationUI()
+        };
+      } else {
+        setError(false);
+        return {
+          behavior: "allow"
+        };
+      }
+    });
+    const showValidationUI = () => {
+      console.log("validation UI");
+      setError(true);
     };
     const handleFieldChange = (value) => {
       if (validateResidentId(value)) {
