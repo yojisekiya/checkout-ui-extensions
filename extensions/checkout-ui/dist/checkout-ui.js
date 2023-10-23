@@ -19566,24 +19566,31 @@ ${errorInfo.componentStack}`);
       namespace: METAFIELD_NAMESPACE,
       key: METAFIELD_KEY
     });
+    const validateResidentId = (value) => {
+      return value.length === 9;
+    };
     const handleFieldChange = (value) => {
-      updateMetafield({
-        type: "updateMetafield",
-        namespace: METAFIELD_NAMESPACE,
-        key: METAFIELD_KEY,
-        valueType: "string",
-        value
-      });
+      if (validateResidentId(value)) {
+        updateMetafield({
+          type: "updateMetafield",
+          namespace: METAFIELD_NAMESPACE,
+          key: METAFIELD_KEY,
+          valueType: "string",
+          value
+        });
+        setError(false);
+      } else {
+        setError(true);
+      }
     };
     return /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
       TextField2,
       {
         label: "Resident ID",
         value: residentIdState == null ? void 0 : residentIdState.value,
-        error: error ? "error" : false,
+        error: error ? "Please provide a valid ID" : false,
         onChange: handleFieldChange
       }
     );
   }
 })();
-//# sourceMappingURL=checkout-ui.js.map
